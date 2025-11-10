@@ -110,7 +110,6 @@ def visualize_dag(trap_map, title: str = "Trapezoidal Map DAG"):
         return node_id_counter[0]
 
     queue = deque([(trap_map.root, 0, get_next_id())])  # (node, level, unique_id)
-    visited = {id(trap_map.root)}  # Only track non-leaf nodes to avoid cycles
 
     while queue:
         node, level, unique_id = queue.popleft()
@@ -119,7 +118,7 @@ def visualize_dag(trap_map, title: str = "Trapezoidal Map DAG"):
             levels[level] = []
         levels[level].append((node, unique_id))
 
-        # Add children to queue
+        # Add children to queue - allow all nodes to appear multiple times for tree structure
         children = []
         if isinstance(node, XNode):
             if node.left:
@@ -134,11 +133,6 @@ def visualize_dag(trap_map, title: str = "Trapezoidal Map DAG"):
 
         for child in children:
             child_unique_id = get_next_id()
-            # Only mark non-leaf nodes as visited to allow leaves to appear multiple times
-            if not isinstance(child, Leaf):
-                if id(child) in visited:
-                    continue
-                visited.add(id(child))
             queue.append((child, level + 1, child_unique_id))
 
     # Calculate positions for each node
@@ -240,8 +234,20 @@ def visualize_dag(trap_map, title: str = "Trapezoidal Map DAG"):
                                      facecolor=fill_color, edgecolor=border_color,
                                      linewidth=2, zorder=3)
                 ax.add_patch(rect)
+            elif isinstance(node, YNode):
+                # YNodes are diamonds
+                size = 0.4
+                vertices = np.array([
+                    [x, y + size],      # top
+                    [x + size, y],      # right
+                    [x, y - size],      # bottom
+                    [x - size, y]       # left
+                ])
+                poly = Polygon(vertices, facecolor=fill_color, edgecolor=border_color,
+                              linewidth=2, zorder=3)
+                ax.add_patch(poly)
             else:
-                # XNodes and YNodes are circles
+                # XNodes are circles
                 circle = plt.Circle((x, y), 0.35, facecolor=fill_color, edgecolor=border_color,
                                    linewidth=2, zorder=3)
                 ax.add_patch(circle)
@@ -255,7 +261,7 @@ def visualize_dag(trap_map, title: str = "Trapezoidal Map DAG"):
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#ADD8E6',
                    markeredgecolor='#0000FF', markersize=10, label='XNode (Point)',
                    markeredgewidth=2),
-        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#FFD580',
+        plt.Line2D([0], [0], marker='D', color='w', markerfacecolor='#FFD580',
                    markeredgecolor='#FF8C00', markersize=10, label='YNode (Segment)',
                    markeredgewidth=2),
         plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='#E6E6FA',
