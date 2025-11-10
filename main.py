@@ -829,6 +829,7 @@ def main():
         # Visualization
         if args.visualize:
             visualize.visualize_trapezoidal_map(trap_map, f"Trapezoidal Map - {args.input_file}")
+            visualize.visualize_dag(trap_map, f"DAG - {args.input_file}")
 
         # Interactive query mode
         print()
